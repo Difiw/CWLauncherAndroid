@@ -11,8 +11,8 @@ android {
         applicationId = "ru.cw.launcher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 27200
-        versionName = "2.7.2"
+        versionCode = 27300
+        versionName = "2.7.3"
         ndk {
             // The bundled Java 17 runtime and MJLauncher JVM backend are ARM64-only.
             // Do not let Android install an APK that cannot start the game.
