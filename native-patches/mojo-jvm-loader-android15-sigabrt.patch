@@ -1,0 +1,32 @@
+--- a/app_mojo/src/main/jni/utils.c
++++ b/app_mojo/src/main/jni/utils.c
+@@
+-    heap_str_array* ret_array = (heap_str_array*) malloc(sizeof(heap_str_array*) + num_entries * sizeof(const char*));
++    heap_str_array* ret_array = (heap_str_array*) malloc(sizeof(heap_str_array) + num_entries * sizeof(const char*));
++    if(ret_array == NULL) return NULL;
++    memset(ret_array, 0, sizeof(heap_str_array) + num_entries * sizeof(const char*));
+
+--- a/app_mojo/src/main/jni/jre_launcher/jre_launcher.c
++++ b/app_mojo/src/main/jni/jre_launcher/jre_launcher.c
+@@
+-    hstr_free(vmargs);
++    /* Keep VM option storage for the process lifetime: HotSpot can retain these
++       pointers and Android allocator tags must not be lost on a later free. */
+@@
+-    hookExec(vm_env);
++    /* Optional ProcessImpl hook intentionally skipped on the embedded JDK. */
+@@
+-    jobjectArray vm_appArgs = hstr_to_jni(vm_env, appArgs, true);
++    jobjectArray vm_appArgs = hstr_to_jni(vm_env, appArgs, false);
++    if(vm_appArgs == NULL) {
++        throwException(env, STAGE_LOAD_CLASSPATH, JNI_ERR, "Failed to create application arguments");
++        return JNI_FALSE;
++    }
+@@
+-    (*java_vm.vm)->DestroyJavaVM(java_vm.vm);
+     unloadJavaVM(&java_vm);
+
+The compiled implementation also emits `CW-JVM stage 1` through `CW-JVM stage 6`
+around JVM creation, class-loader hook installation, argument conversion, and the
+call to the Java main method. The patch is intentionally kept as a small delta;
+the third-party launcher source is not copied into CWLauncher.
